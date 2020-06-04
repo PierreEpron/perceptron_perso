@@ -7,7 +7,7 @@ from sklearn.metrics import euclidean_distances, classification_report
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 class Perceptron(BaseEstimator, ClassifierMixin):
-    def __init__(self, n_iter=1):
+    def __init__(self, n_iter=1e5):
         self.n_iter = n_iter
 
     def fit(self, X, y):
@@ -19,14 +19,13 @@ class Perceptron(BaseEstimator, ClassifierMixin):
         self.weights_ = np.ones((X.shape[1]))
         
         for i in range(int(self.n_iter)):
-            for j in range(0, self.weights_.shape[0]):
-                x = np.random.randint(self.y_.shape[0])
-                if np.dot(self.weights_, self.X_[x, :]) < 0:
-                    if self.y_[x] == 1:
-                        self.weights_ += self.X_[x, :]
-                else:
-                    if self.y_[x] == 0:
-                        self.weights_ -= self.X_[x, :]
+            x = np.random.randint(self.y_.shape[0])
+            if np.dot(self.weights_, self.X_[x, :]) < 0:
+                if self.y_[x] == 1:
+                    self.weights_ += self.X_[x, :]
+            else:
+                if self.y_[x] == 0:
+                    self.weights_ -= self.X_[x, :]
         return self
 
     def predict(self, X):
@@ -44,7 +43,7 @@ X = Normalizer().fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0)
 
 
-p = Perceptron(n_iter=10000).fit(X_train, y_train)
+p = Perceptron(n_iter=1e5).fit(X_train, y_train)
 # print(p.weights_)
 y_pred = p.predict(X_test)
 print(classification_report(y_test, y_pred))
