@@ -2,12 +2,12 @@ import numpy as np
 
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
-from sklearn.metrics import euclidean_distances
+from sklearn.metrics import euclidean_distances, classification_report
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 class Perceptron(BaseEstimator, ClassifierMixin):
-    def __init__(self, n_iter=1e3):
+    def __init__(self, n_iter=1):
         self.n_iter = n_iter
 
     def fit(self, X, y):
@@ -16,12 +16,12 @@ class Perceptron(BaseEstimator, ClassifierMixin):
         self.X_ = X
         self.y_ = y     
         
-        self.weights_ = np.random.rand((X.shape[1]))
+        self.weights_ = np.ones((X.shape[1]))
         
         for i in range(int(self.n_iter)):
             for j in range(0, self.weights_.shape[0]):
                 x = np.random.randint(self.y_.shape[0])
-                if np.dot(self.weights_, self.X_[x, :]) > 0:
+                if np.dot(self.weights_, self.X_[x, :]) < 0:
                     if self.y_[x] == 1:
                         self.weights_ += self.X_[x, :]
                 else:
@@ -32,15 +32,19 @@ class Perceptron(BaseEstimator, ClassifierMixin):
     def predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
-
-        closest = np.argmin(euclidean_distances(X, self.X_), axis=1)
-        return [np.dot(x, self.weights_) for x in X]
+        return [0 if np.dot(x, self.weights_) < 0 else 1 for x in X]
 
 
 from sklearn.datasets import load_breast_cancer
+from sklearn.preprocessing import Normalizer
+from sklearn.model_selection import train_test_split
 
 X, y = load_breast_cancer(return_X_y=True)
-# print(X.shape)
-# print(y)
+X = Normalizer().fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0)
 
-print(Perceptron(n_iter=1).fit(X, y).predict((X)))
+
+p = Perceptron(n_iter=10000).fit(X_train, y_train)
+# print(p.weights_)
+y_pred = p.predict(X_test)
+print(classification_report(y_test, y_pred))
